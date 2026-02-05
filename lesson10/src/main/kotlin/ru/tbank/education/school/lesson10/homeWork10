@@ -1,0 +1,342 @@
+package main.kotlin.ru.tbank.education.school.lesson10.practise
+
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
+import java.time.Month
+
+
+/*
+1) Строки + регулярные выражения
+["Name: Ivan, score=17", ...]
+Извлечь имя и score, собрать пары, вывести победителя.
+*/
+fun taskNo1() {
+    val lines = listOf(
+        "Name: Ivan, score=17",
+        "Name: Olga, score=23",
+        "Name: Max, score=5"
+    )
+
+    val re = Regex("""^Name:\s*([A-Za-z]+)\s*,\s*score=(\d+)\s*$""")
+
+    val pairs: List<Pair<String, Int>> = lines.mapNotNull { s ->
+        val m = re.find(s) ?: return@mapNotNull null
+        val name = m.groupValues[1]
+        val score = m.groupValues[2].toInt()
+        name to score
+    }
+
+    println("Task 1 pairs: $pairs")
+
+    val best = pairs.maxByOrNull { it.second }
+    if (best != null) {
+        println("Task 1 best: ${best.first} (${best.second})")
+    } else {
+        println("Task 1: no valid lines")
+    }
+}
+
+/*
+2) Даты + коллекции
+["2026-01-22", ...]
+Преобразовать в даты, отсортировать, посчитать сколько в январе 2026.
+*/
+fun taskNo2() {
+    val dateStrings = listOf(
+        "2026-01-22",
+        "2026-02-01",
+        "2025-12-31",
+        "2026-01-05"
+    )
+
+    val fmt = DateTimeFormatter.ISO_LOCAL_DATE
+
+    val dates = dateStrings.map { LocalDate.parse(it, fmt) }.sorted()
+
+    println("Task 2 sorted dates: ${dates.joinToString { it.format(fmt) }}")
+
+    val countJan2026 = dates.count { it.year == 2026 && it.month == Month.JANUARY }
+    println("Task 2 count in Jan 2026: $countJan2026")
+}
+
+/*
+3) Коллекции + строки
+"apple orange apple banana orange apple"
+Частоты слов, вывести слова с частотой > 1 по алфавиту.
+*/
+fun taskNo3() {
+    val text = "apple orange apple banana orange apple"
+
+    val words = text.trim().split(Regex("""\s+""")).filter { it.isNotEmpty() }
+
+    val freq = mutableMapOf<String, Int>()
+    for (w in words) {
+        freq[w] = (freq[w] ?: 0) + 1
+    }
+
+    println("Task 3 freq: $freq")
+
+    val repeated = freq
+        .filter { (_, c) -> c > 1 }
+        .keys
+        .sorted()
+
+    println("Task 3 repeated words: ${repeated.joinToString(", ")}")
+}
+
+fun taskNo4() {
+    val lines = listOf<String>("A-123", "B-7", "AA-12", "C-001", "D-99x")
+
+    val re = Regex("""^[A-Z]-\d{1,3}$""")
+
+    val answerLines = lines.filter { it.matches(re) }
+
+    println("Task 4 answer: $answerLines")
+}
+
+fun taskNo5() {
+    val lines = listOf<String>(" Hello world ", "A B C", " one")
+    println("Task 5 answer:")
+    for (text in lines) {
+        val words = text.trim().split(Regex("""\s+""")).filter { it.isNotEmpty() }
+        val result = words.joinToString(separator = " ")
+        println(result)
+    }
+}
+
+fun taskNo6() {
+    val datePairs = listOf(
+        Pair("2026-01-01", "2026-01-10"),
+        Pair("2025-12-31", "2026-01-01"),
+        Pair("2026-02-01", "2026-01-22")
+    )
+
+    val differences = datePairs.map { (first, second) ->
+        val d1 = LocalDate.parse(first)
+        val d2 = LocalDate.parse(second)
+        ChronoUnit.DAYS.between(d1, d2).toInt()
+    }
+    println("Difference in days: $differences")
+}
+
+fun taskNo7() {
+    val strings7 = listOf("math:Ivan", "bio:Olga", "math:Max", "bio:Ivan", "cs:Olga")
+
+    val subjectMap = mutableMapOf<String, MutableList<String>>()
+    strings7.forEach {
+        val (subject, student) = it.split(":")
+        subjectMap.getOrPut(subject) { mutableListOf() }.add(student)
+    }
+    println("Map of subjects: $subjectMap")
+}
+
+fun taskNo8() {
+    val strings8 = listOf(
+        "Start at 2026/01/22 09:14",
+        "No time here",
+        "End: 22-01-2026 18:05"
+    )
+
+    val regexDate1 = Regex("""(\d{4})/(\d{2})/(\d{2})\s+(\d{2}:\d{2})""")
+    val regexDate2 = Regex("""(\d{2})-(\d{2})-(\d{4})\s+(\d{2}:\d{2})""")
+
+    val extractedTimes = strings8.mapNotNull { line ->
+        when {
+            regexDate1.containsMatchIn(line) -> {
+                val match = regexDate1.find(line)!!
+                val (year, month, day, time) = match.destructured
+                "$year-${month}-${day} $time"
+            }
+
+            regexDate2.containsMatchIn(line) -> {
+                val match = regexDate2.find(line)!!
+                val (day, month, year, time) = match.destructured
+                "$year-${month}-${day} $time"
+            }
+
+            else -> null
+        }
+    }
+    println("Extracted times: $extractedTimes")
+}
+
+fun homework() {
+
+    val logs = listOf(
+        "2026-01-22 09:14 | ID:042 | STATUS:sent",
+        "TS=22/01/2026-09:27; status=delivered; #042",
+        "2026-01-22 09:10 | ID:043 | STATUS:sent",
+        "2026-01-22 09:18 | ID:043 | STATUS:delivered",
+        "TS=22/01/2026-09:05; status=sent; #044",
+        "[22.01.2026 09:40] delivered (id:044)",
+        "2026-01-22 09:20 | ID:045 | STATUS:sent",
+        "[22.01.2026 09:33] delivered (id:045)",
+        "   ts=22/01/2026-09:50; STATUS=Sent; #046   ",
+        " [22.01.2026 10:05]   DELIVERED   (ID:046) "
+    )
+
+    // Часть 1: Нормализация логов
+
+    data class LogEntry(val dt: String, val id: Int, val status: String)
+
+    fun normalize(line: String): LogEntry? {
+        val trimmedLine = line.trim()
+
+        val regexA = Regex(
+            """(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})\s*[|]\s*ID:\s*(\d+)\s*[|]\s*STATUS:\s*(\w+)""",
+            RegexOption.IGNORE_CASE
+        )
+
+        val regexB = Regex(
+            """TS\s*=\s*(\d{2})/(\d{2})/(\d{4})-(\d{2}:\d{2})\s*;\s*status\s*=\s*(\w+)\s*;\s*#\s*(\d+)""",
+            RegexOption.IGNORE_CASE
+        )
+
+        val regexC = Regex(
+            """\[(\d{2})\.(\d{2})\.(\d{4})\s+(\d{2}:\d{2})\]\s+(\w+)\s*\(id:\s*(\d+)\)""",
+            RegexOption.IGNORE_CASE
+        )
+
+        return when {
+            regexA.matches(trimmedLine) -> {
+                val match = regexA.find(trimmedLine)!!
+                val (dt, idStr, status) = match.destructured
+                LogEntry(dt, idStr.toInt(), status.lowercase())
+            }
+
+            regexB.containsMatchIn(trimmedLine) -> {
+                val match = regexB.find(trimmedLine)!!
+                val (day, month, year, time, status, idStr) = match.destructured
+                val dt = "$year-${month}-${day} $time"
+                LogEntry(dt, idStr.toInt(), status.lowercase())
+            }
+
+            regexC.containsMatchIn(trimmedLine) -> {
+                val match = regexC.find(trimmedLine)!!
+                val (day, month, year, time, status, idStr) = match.destructured
+                val dt = "$year-${month}-${day} $time"
+                LogEntry(dt, idStr.toInt(), status.lowercase())
+            }
+
+            else -> null
+        }
+    }
+
+    val normalizedLogs = mutableListOf<LogEntry>()
+    val brokenLogs = mutableListOf<String>()
+
+    logs.forEach { log ->
+        val normalized = normalize(log)
+        if (normalized != null) {
+            normalizedLogs.add(normalized)
+        } else {
+            brokenLogs.add(log)
+        }
+    }
+
+    println("Normalized logs (${normalizedLogs.size}):")
+    normalizedLogs.forEach { println("  $it") }
+
+    if (brokenLogs.isNotEmpty()) {
+        println("Broken logs (${brokenLogs.size}):")
+        brokenLogs.forEach { println("  '$it'") }
+    }
+
+    // Часть 2: Расчёт времени доставки
+
+    val formatterDT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+
+    data class DeliveryInfo(
+        var sentTime: LocalDateTime? = null,
+        var deliveredTime: LocalDateTime? = null,
+        var sentCount: Int = 0,
+        var deliveredCount: Int = 0
+    )
+
+    val deliveryMap = mutableMapOf<Int, DeliveryInfo>()
+
+    normalizedLogs.forEach { entry ->
+        val info = deliveryMap.getOrPut(entry.id) { DeliveryInfo() }
+        val time = LocalDateTime.parse(entry.dt, formatterDT)
+
+        when (entry.status) {
+            "sent" -> {
+                info.sentTime = time
+                info.sentCount++
+            }
+
+            "delivered" -> {
+                info.deliveredTime = time
+                info.deliveredCount++
+            }
+        }
+    }
+
+    val completeDeliveries = mutableListOf<Pair<Int, Long>>()
+    val incompleteIds = mutableListOf<Int>()
+    val timeErrorIds = mutableListOf<Int>()
+
+    deliveryMap.forEach { (id, info) ->
+        when {
+            info.sentTime == null || info.deliveredTime == null -> {
+                incompleteIds.add(id)
+            }
+
+            info.deliveredTime!!.isBefore(info.sentTime) -> {
+                timeErrorIds.add(id)
+            }
+
+            else -> {
+                val duration = ChronoUnit.MINUTES.between(info.sentTime, info.deliveredTime)
+                completeDeliveries.add(id to duration)
+            }
+        }
+    }
+
+    println("incomplete ID: $incompleteIds")
+    println("Time Error ID: $timeErrorIds")
+
+    // Часть 3: Отчёт
+
+    val sortedDeliveries = completeDeliveries.sortedByDescending { it.second }
+    println("All deliveries:")
+    sortedDeliveries.forEach { (id, minutes) ->
+        println("  ID $id: $minutes minutes")
+    }
+
+    val longestDelivery = sortedDeliveries.firstOrNull()
+    println("The longest delivery: ID ${longestDelivery?.first} - ${longestDelivery?.second} minutes")
+
+    val violations = sortedDeliveries.filter { it.second > 20 }
+    println("Violations:")
+    if (violations.isEmpty()) {
+        println("  No violations")
+    } else {
+        violations.forEach { (id, minutes) ->
+            println("  ID $id: $minutes minutes")
+        }
+    }
+}
+
+fun main() {
+    taskNo1()
+    println()
+    taskNo2()
+    println()
+    taskNo3()
+    println()
+    taskNo4()
+    println()
+    taskNo5()
+    println()
+    taskNo6()
+    println()
+    taskNo7()
+    println()
+    taskNo8()
+    println()
+    homework()
+
+}
