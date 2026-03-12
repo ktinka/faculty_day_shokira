@@ -65,7 +65,7 @@ zip -r project_backup.zip project_backup
 Создать файл cleaned_app.log, содержащий содержимое app.log без пустых строк.
 
 ```bash
-sed '/^$/d' logs/app.logs > cleaned_app.log
+sed '/^$/d' logs/app.log > cleaned_app.log
 ```
 
 ## Задание 10. Подсчёт количества строк в каждом конфиге
@@ -75,7 +75,7 @@ db.conf 8
 (где число — количество строк в файле)
 
 ```bash
-du -rl ./*.conf > conf_stats.txt
+wc -l config/*.conf | grep -v total > conf_stats.txt
 ```
 
 
